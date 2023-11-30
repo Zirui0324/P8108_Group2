@@ -1,0 +1,53 @@
+---
+title: "Missing Data"
+author: "Meng Fang"
+date: "2023-11-30"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, message = F}
+library(tidyverse)
+library(memisc)
+```
+
+
+```{r}
+cirr <- read.csv("./cirrhosis.csv") %>% janitor::clean_names()
+```
+
+## Delete patients without treatment, preprocess data 
+
+```{r}
+cirr <- cirr[1:312,]
+cirr <- cirr %>%
+  mutate_at(c("status", "drug","sex","ascites", "hepatomegaly","spiders","stage"), as.factor) %>%
+  mutate(edema = case_when(edema == "N" ~ 0,
+                           edema == "S" ~ 0.5,
+                           edema == "Y" ~ 1),
+         status = ifelse(status =="D", 1, 0),
+         age = age/365,
+         cholesterol = scale(cholesterol),
+         copper = scale(copper),
+         tryglicerides = scale(tryglicerides),
+         platelets = scale(platelets)) %>%
+  filter(stage != "NA")
+```
+
+## Impute Numeric Missing Values
+
+```{r}
+cirr$cholesterol[is.na(cirr$cholesterol)]= median(cirr$cholesterol, na.rm = TRUE)
+cirr$copper[is.na(cirr$copper)]= median(cirr$copper, na.rm = TRUE)
+cirr$tryglicerides[is.na(cirr$tryglicerides)]= median(cirr$tryglicerides, na.rm = TRUE)
+cirr$platelets[is.na(cirr$platelets)]= median(cirr$platelets, na.rm = TRUE)
+```
+
+
+```{r}
+write.csv(cirr, file = "final_cirr.csv")
+```
+
