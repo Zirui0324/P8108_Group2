@@ -1,0 +1,69 @@
+---
+title: "p8108_final_EDA_pt2"
+author: "Zhaohua Chunyu"
+date: "2023-12-11"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(ggplot2)
+library(dplyr)
+library(table1)
+library(caret)
+library(gridExtra)
+```
+
+## load data
+```{r}
+cirr = read.csv("/Users/zozochunyu/Biostats_Fall23/P8108SurvivalAnalysis/FinalProject/final_cirr.csv")
+head(cirr)
+```
+## baseline summaries
+```{r}
+summary_table <- cirr %>% 
+  select(age, sex, drug, bilirubin, cholesterol, albumin, copper, 
+         alk_phos, sgot, tryglicerides, platelets, prothrombin) %>% 
+  summary() 
+summary_table
+
+# descriptive summary by stage
+table1(~ age + sex + drug + bilirubin + cholesterol + albumin + copper + alk_phos + sgot + 
+         tryglicerides + platelets + prothrombin | stage , data = cirr)
+
+```
+
+```{r}
+
+theme1 <- trellis.par.get()
+theme1$plot.symbol$col <- rgb(.2, .4, .2, .5)
+theme1$plot.symbol$pch <- 16
+theme1$plot.line$col <- rgb(.8, .1, .1, 1)
+theme1$plot.line$lwd <- 2
+theme1$strip.background$col <- rgb(.0, .2, .6, .2)
+trellis.par.set(theme1)
+
+featurePlot(x = cirr[, c("age", "bilirubin", "cholesterol", "albumin", "copper", "alk_phos", "sgot", 
+                         "tryglicerides", "platelets", "prothrombin")], 
+            y = cirr$n_days,
+            plot = "scatter",
+            span = .5, 
+            labels = c("Predictors", "Number of Days"),
+            type = c("p", "smooth"),
+            layout = c(5,2))
+
+```
+## baseline c
+```{r}
+p1 = ggplot(cirr, aes(x = sex, y = n_days, group = sex)) +
+  geom_boxplot()
+p2 = ggplot(cirr, aes(x = status, y = n_days, group = status)) +
+  geom_boxplot()
+p3 = ggplot(cirr, aes(x = drug, y = n_days, group = drug)) +
+  geom_boxplot()
+p4 = ggplot(cirr, aes(x = stage, y = n_days, group = stage)) +
+  geom_boxplot()
+
+
+grid.arrange(p1, p2, p3, p4, ncol = 2, nrow = 2)
+```
+
